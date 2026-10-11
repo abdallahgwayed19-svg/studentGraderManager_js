@@ -1,0 +1,106 @@
+const fs = require('fs');
+const readline = require('readline');
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+let students = [];
+
+function loadFromFile() {
+    try {
+        if (fs.existsSync('students.json')) {
+            const data = fs.readFileSync('students.json', 'utf8');
+            students = JSON.parse(data);
+        }
+    } catch (err) {
+        console.log("Error loading data from file.");
+    }
+}
+
+function saveToFile() {
+    try {
+        fs.writeFileSync('students.json', JSON.stringify(students, null, 2), 'utf8');
+    } catch (err) {
+        console.log("Error saving data to file.");
+    }
+}
+
+function showMenu() {
+    console.log("=== Student Grade Manager ===");
+    console.log("1. Add Student");
+    console.log("2. Display All Students");
+    console.log("3. Calculate Average Grade");
+    console.log("4. Exit");
+    rl.question("Enter choice: ", handleMenu);
+}
+
+function handleMenu(choice) {
+    if (choice === '1') {
+        addStudent();
+    } else if (choice === '2') {
+        displayStudents();
+    } else if (choice === '3') {
+        calculateAverage();
+    } else if (choice === '4') {
+        console.log("Data saved. Exiting program...");
+        rl.close();
+    } else {
+        console.log("Invalid choice. Try again.\n");
+        showMenu();
+    }
+}
+
+function addStudent() {
+    console.log("\n--- Add New Student ---");
+    rl.question("Enter student name: ", (name) => {
+        rl.question("Enter student ID: ", (idInput) => {
+            const id = parseInt(idInput);
+            if (isNaN(id)) {
+                console.log("Invalid ID. Student not added.\n");
+                return showMenu();
+            }
+            rl.question("Enter student grade: ", (gradeInput) => {
+                const grade = parseFloat(gradeInput);
+                if (isNaN(grade)) {
+                    console.log("Invalid grade. Student not added.\n");
+                    return showMenu();
+                }
+                students.push({ name, id, grade });
+                saveToFile();
+                console.log("Student added and saved successfully!\n");
+                showMenu();
+            });
+        });
+    });
+}
+
+function displayStudents() {
+    if (students.length === 0) {
+        console.log("\nNo students found.\n");
+        return showMenu();
+    }
+    console.log("\n---------------- Student List ----------------");
+    students.forEach((s) => {
+        console.log(ID: ${s.id} | Name: ${s.name} | Grade: ${s.grade});
+    });
+    console.log("----------------------------------------------\n");
+    showMenu();
+}
+
+function calculateAverage() {
+    if (students.length === 0) {
+        console.log("\nNo students to calculate average.\n");
+        return showMenu();
+    }
+    const sum = students.reduce((total, s) => total + s.grade, 0);
+    const average = sum / students.length;
+    console.log("\n========================================");
+    console.log(` Average Grade: ${average.toFixed(2)}`);
+    console.log("========================================\n");
+    showMenu();
+}
+
+loadFromFile();
+showMenu();
